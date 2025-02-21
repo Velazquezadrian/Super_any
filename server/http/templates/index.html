@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Any</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+    <body>
+
+        <h1>Interacción con Any</h1>
+            <form id="form-gemini">
+                <label for="pregunta-gemini">Pregunta para Gemini:</label>
+                <input type="text" id="pregunta-gemini" name="pregunta">
+                <button type="submit">Enviar</button>
+            </form>
+        <div id="respuesta-gemini"></div>
+
+            <form id="form-copilot">
+                <label for="pregunta-copilot">Pregunta para Copilot:</label>
+                <input type="text" id="pregunta-copilot" name="pregunta">
+                <button type="submit">Enviar</button>
+            </form>
+        <div id="respuesta-copilot"></div>
+
+            <form id="form-llama3_2">
+                <label for="pregunta-llama3_2">Pregunta para Llama 3.2:</label>
+                <input type="text" id="pregunta-llama3_2" name="pregunta">
+                <button type="submit">Enviar</button>
+            </form>
+
+        <h1>Super Any</h1>
+
+        <form id="conversation-form" method="POST" action="/save_conversation">
+            <label for="platform">Plataforma:</label>
+            <input type="text" id="platform" name="platform" required><br>
+
+            <label for="conversation">Conversación:</label>
+            <textarea id="conversation" name="conversation" required></textarea><br>
+
+            <button type="submit">Guardar Conversación</button>
+        </form>
+
+        <a href="/historial">Ver Historial de Conversaciones</a>
+
+        <div id="respuesta-llama3_2"></div>
+
+        <script>
+            document.getElementById('form-gemini').addEventListener('submit', function(event) {
+                event.preventDefault();
+                var pregunta = document.getElementById('pregunta-gemini').value;
+                fetch('/sync/gemini', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({pregunta: pregunta})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('respuesta-gemini').innerText = data.status;
+                });
+            });
+
+            document.getElementById('form-copilot').addEventListener('submit', function(event) {
+                event.preventDefault();
+                var pregunta = document.getElementById('pregunta-copilot').value;
+                fetch('/sync/copilot', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({pregunta: pregunta})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('respuesta-copilot').innerText = data.status;
+                });
+            });
+
+            document.getElementById('form-llama3_2').addEventListener('submit', function(event) {
+                event.preventDefault();
+                var pregunta = document.getElementById('pregunta-llama3_2').value;
+                fetch('/sync/llama3_2', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({pregunta: pregunta})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('respuesta-llama3_2').innerText = data.status;
+                });
+            });
+        </script>
+    </body>
+</html>

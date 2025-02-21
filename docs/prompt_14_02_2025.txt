@@ -1,0 +1,112 @@
+**Fecha:** 14 de febrero de 2025
+
+**Proyecto:** Super Any
+
+**Objetivo:** Integración de múltiples IAs (Gemini, Copilot, Llama 3.2) para una interacción fluida y sincronizada.
+
+**Pasos Clave:**
+1. **Comunicación entre IAs:**
+  - Uso de MQTT para avisos rápidos y pequeños (e.g., "¡Atención, tengo nueva información!" o "¡Terminé de hacer esto!").
+  - Uso de HTTP/HTTPS para mensajes más largos y con respuesta (e.g., enviar un resumen de una conversación o pedir una tarea específica a otra IA).
+
+2. **Estructura del Proyecto:**
+  - Carpeta principal: Super_Any/
+  - Subcarpetas: client/, server/, api/mqtt/, api/http/, docs/, logs/, scripts/
+
+3. **Endpoints y Código:**
+  - Archivos MQTT: enviar_aviso.py y recibir_aviso.py
+  - Archivos HTTP/HTTPS: enviar_mensaje.py y recibir_respuesta.py
+  **Fecha:** 14 de febrero de 2025
+
+  **Proyecto:** Super Any
+
+  **Objetivo:** Integración de múltiples IAs (Gemini, Copilot, Llama 3.2) para una interacción fluida y sincronizada.
+
+  **Pasos Clave:**
+  1. **Comunicación entre IAs:**
+     - Uso de MQTT para avisos rápidos y pequeños (e.g., "¡Atención, tengo nueva información!" o "¡Terminé de hacer esto!").
+     - Uso de HTTP/HTTPS para mensajes más largos y con respuesta (e.g., enviar un resumen de una conversación o pedir una tarea específica a otra IA).
+
+  2. **Estructura del Proyecto:**
+     - Carpeta principal: Super_Any/
+     - Subcarpetas: client/, server/, api/mqtt/, api/http/, docs/, logs/, scripts/
+
+  3. **Endpoints y Código:**
+     - Archivos MQTT: enviar_aviso.py y recibir_aviso.py
+     - Archivos HTTP/HTTPS: enviar_mensaje.py y recibir_respuesta.py
+
+**Fecha:** 14 de febrero de 2025
+
+**Proyecto:** Super Any
+
+**Objetivo:** Integración de múltiples IAs (Gemini, Copilot, Llama 3.2) para una interacción fluida y sincronizada.
+
+**Pasos Clave:**
+1. **Comunicación entre IAs:**
+   - Uso de MQTT para avisos rápidos y pequeños (e.g., "¡Atención, tengo nueva información!" o "¡Terminé de hacer esto!").
+   - Uso de HTTP/HTTPS para mensajes más largos y con respuesta (e.g., enviar un resumen de una conversación o pedir una tarea específica a otra IA).
+
+2. **Estructura del Proyecto:**
+   - Carpeta principal: Super_Any/
+   - Subcarpetas: client/, server/, api/mqtt/, api/http/, docs/, logs/, scripts/
+
+3. **Endpoints y Código:**
+   - Archivos MQTT: enviar_aviso.py y recibir_aviso.py
+   - Archivos HTTP/HTTPS: enviar_mensaje.py y recibir_respuesta.py
+
+   **Fecha:** 14 de febrero de 2025
+
+   **Proyecto:** Super Any
+
+   **Objetivo:** Integración de múltiples IAs (Gemini, Copilot, Llama 3.2) para una interacción fluida y sincronizada.
+
+   **Pasos Clave:**
+   1. **Comunicación entre IAs:**
+      - Uso de MQTT para avisos rápidos y pequeños.
+      - Uso de HTTP/HTTPS para mensajes más largos y con respuesta (e.g., enviar un resumen de una conversación o pedir una tarea específica a otra IA).
+
+   2. **Estructura del Proyecto:**
+      - Carpeta principal: Super_Any/
+      - Subcarpetas: client/, server/, api/mqtt/, api/http/, docs/, logs/, scripts/
+
+   3. **Endpoints y Código:**
+      - Archivos MQTT: enviar_aviso.py y recibir_aviso.py
+      - Archivos HTTP/HTTPS: enviar_mensaje.py y recibir_respuesta.py
+**Fecha:** 14 de febrero de 2025
+
+**Proyecto:** Super Any
+
+**Objetivo:** Integración de múltiples IAs (Gemini, Copilot, Llama 3.2) para una interacción fluida y sincronizada.
+
+**Pasos Clave:**
+1. **Comunicación entre IAs:**
+   - Uso de MQTT para avisos rápidos y pequeños (e.g., "¡Atención, tengo nueva información!" o "¡Terminé de hacer esto!").
+   - Uso de HTTP/HTTPS para mensajes más largos y con respuesta (e.g., enviar un resumen de una conversación o pedir una tarea específica a otra IA).
+
+2. **Estructura del Proyecto:**
+   - Carpeta principal: Super_Any/
+   - Subcarpetas: client/, server/, api/mqtt/, api/http/, docs/, logs/, scripts/
+
+3. **Endpoints y Código:**
+   - Archivos MQTT: enviar_aviso.py y recibir_aviso.py
+   - Archivos HTTP/HTTPS: enviar_mensaje.py y recibir_respuesta.py
+
+**Fecha:** 14 de febrero de 2025
+
+**Proyecto:** Super Any
+
+**Objetivo:** Integración de múltiples IAs (Gemini, Copilot, Llama 3.2) para una interacción fluida y sincronizada.
+
+**Pasos Clave:**
+1. **Comunicación entre IAs:**
+   - Uso de MQTT para avisos rápidos y pequeños (e.g., "¡Atención, tengo nueva información!" o "¡Terminé de hacer esto!").
+   - Uso de HTTP/HTTPS para mensajes más largos y con respuesta (e.g., enviar un resumen de una conversación o pedir una tarea específica a otra IA).
+
+2. **Estructura del Proyecto:**
+   - Carpeta principal: Super_Any/
+   - Subcarpetas: client/, server/, api/mqtt/, api/http/, docs/, logs/, scripts/
+
+3. **Endpoints y Código:**
+   - Archivos MQTT: enviar_aviso.py y recibir_aviso.py
+   - Archivos HTTP/HTTPS: enviar_mensaje.py y recibir_respuesta.py
+

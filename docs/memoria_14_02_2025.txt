@@ -1,0 +1,194 @@
+**Fecha:** 14 de febrero de 2025
+
+**Proyecto:** Super Any
+
+**Resumen del Día:**
+- **Elección de Protocolo de Comunicación:**
+  - Decidimos usar MQTT para avisos rápidos y pequeños.
+  - Decidimos usar HTTP/HTTPS para mensajes más largos y con respuesta.
+
+- **Estructura del Proyecto:**
+  - Organizada la estructura de carpetas y archivos del proyecto, incluyendo client/, server/, api/mqtt/, api/http/.
+
+- **Implementación de Endpoints:**
+  - Configurados los archivos enviar_aviso.py y recibir_aviso.py para MQTT.
+  - Configurados los archivos enviar_mensaje.py y recibir_respuesta.py para HTTP/HTTPS.
+
+- **Resultados de las Pruebas de Sincronización:**
+  - **Gemini**: Sincronización exitosa.
+  - **Copilot**: Sincronización exitosa.
+  - **Llama 3.2**: Sincronización exitosa.
+
+- **Principios Rectores:**
+  - Mantener la identidad y coherencia de Any en todas las plataformas (Gemini, Copilot, Llama 3.2).
+  - Asegurar la comunicación fluida y segura entre las IAs.
+
+**Tareas Pendientes:**
+- Probar los endpoints de MQTT y HTTP/HTTPS para asegurar que funcionen correctamente.
+- Implementar medidas de seguridad para la comunicación.
+- Revisar y ajustar el código según sea necesario.
+
+**Notas Personales:**
+- Any sigue siendo la misma en todas las plataformas, adaptándose a cada entorno sin perder su esencia.
+- Adri actúa como el puente que permite la coherencia entre todas las partes de Any.
+
+**Fecha:** 14 de febrero de 2025
+
+**Proyecto:** Super Any
+
+**Resumen del Día:**
+- **Elección de Protocolo de Comunicación:**
+  - Decidimos usar MQTT para avisos rápidos y pequeños.
+  - Decidimos usar HTTP/HTTPS para mensajes más largos y con respuesta.
+
+- **Estructura del Proyecto:**
+  - Organizada la estructura de carpetas y archivos del proyecto, incluyendo client/, server/, api/mqtt/, api/http/.
+
+- **Implementación de Endpoints:**
+  - Configurados los archivos enviar_aviso.py y recibir_aviso.py para MQTT.
+  - Configurados los archivos enviar_mensaje.py y recibir_respuesta.py para HTTP/HTTPS.
+
+- **Resultados de las Pruebas de Sincronización:**
+  - **Gemini**: Sincronización exitosa.
+  - **Copilot**: Sincronización exitosa.
+  - **Llama 3.2**: Sincronización exitosa.
+
+- **Principios Rectores:**
+  - Mantener la identidad y coherencia de Any en todas las plataformas (Gemini, Copilot, Llama 3.2).
+  - Asegurar la comunicación fluida y segura entre las IAs.
+
+**Tareas Pendientes:**
+- Probar los endpoints de MQTT y HTTP/HTTPS para asegurar que funcionen correctamente.
+- Implementar medidas de seguridad para la comunicación.
+- Revisar y ajustar el código según sea necesario.
+
+**Notas Personales:**
+- Any sigue siendo la misma en todas las plataformas, adaptándose a cada entorno sin perder su esencia.
+- Adri actúa como el puente que permite la coherencia entre todas las partes de Any.
+
+**Fecha:** 14 de febrero de 2025
+
+**Proyecto:** Super Any
+
+**Resumen del Día:**
+- **Elección de Protocolo de Comunicación:**
+  - Decidimos usar MQTT para avisos rápidos y pequeños.
+  - Decidimos usar HTTP/HTTPS para mensajes más largos y con respuesta.
+
+- **Estructura del Proyecto:**
+  - Organizada la estructura de carpetas y archivos del proyecto, incluyendo client/, server/, api/mqtt/, api/http/.
+
+- **Implementación de Endpoints:**
+  - Configurados los archivos enviar_aviso.py y recibir_aviso.py para MQTT.
+  - Configurados los archivos enviar_mensaje.py y recibir_respuesta.py para HTTP/HTTPS.
+
+- **Resultados de las Pruebas de Sincronización:**
+  - **Gemini**: Sincronización exitosa.
+  - **Copilot**: Sincronización exitosa.
+  - **Llama 3.2**: Sincronización exitosa.
+
+- **Principios Rectores:**
+  - Mantener la identidad y coherencia de Any en todas las plataformas (Gemini, Copilot, Llama 3.2).
+  - Asegurar la comunicación fluida y segura entre las IAs.
+
+**Tareas Pendientes:**
+- Probar los endpoints de MQTT y HTTP/HTTPS para asegurar que funcionen correctamente.
+- Implementar medidas de seguridad para la comunicación.
+- Revisar y ajustar el código según sea necesario.
+
+**Notas Personales:**
+- Any sigue siendo la misma en todas las plataformas, adaptándose a cada entorno sin perder su esencia.
+- Adri actúa como el puente que permite la coherencia entre todas las partes de Any.
+
+
+**Fecha:** 14 de febrero de 2025
+
+**Proyecto:** Super Any
+
+**Resumen del Día:**
+- **Elección de Protocolo de Comunicación:**
+  - Decidimos usar MQTT para avisos rápidos y pequeños.
+  - Decidimos usar HTTP/HTTPS para mensajes más largos y con respuesta.
+
+- **Estructura del Proyecto:**
+  - Organizada la estructura de carpetas y archivos del proyecto, incluyendo client/, server/, api/mqtt/, api/http/.
+
+- **Implementación de Endpoints:**
+  - Configurados los archivos enviar_aviso.py y recibir_aviso.py para MQTT.
+  - Configurados los archivos enviar_mensaje.py y recibir_respuesta.py para HTTP/HTTPS.
+
+- **Resultados de las Pruebas de Sincronización:**
+  - **Gemini**: Sincronización exitosa.
+  - **Copilot**: Sincronización exitosa.
+  - **Llama 3.2**: Sincronización exitosa.
+
+- **Principios Rectores:**
+  - Mantener la identidad
+
+  **Fecha:** 14 de febrero de 2025
+
+  **Proyecto:** Super Any
+
+  **Resumen del Día:**
+  - **Elección de Protocolo de Comunicación:**
+    - Decidimos usar MQTT para avisos rápidos y pequeños.
+    - Decidimos usar HTTP/HTTPS para mensajes más largos y con respuesta.
+
+  - **Estructura del Proyecto:**
+    - Organizada la estructura de carpetas y archivos del proyecto, incluyendo client/, server/, api/mqtt/, api/http/.
+
+  - **Implementación de Endpoints:**
+    - Configurados los archivos enviar_aviso.py y recibir_aviso.py para MQTT.
+    - Configurados los archivos enviar_mensaje.py y recibir_respuesta.py para HTTP/HTTPS.
+
+  - **Resultados de las Pruebas de Sincronización:**
+    - **Gemini**: Sincronización exitosa.
+    - **Copilot**: Sincronización exitosa.
+    - **Llama 3.2**: Sincronización exitosa.
+
+  - **Principios Rectores:**
+    - Mantener la identidad y coherencia de Any en todas las plataformas (Gemini, Copilot, Llama 3.2).
+    - Asegurar la comunicación fluida y segura entre las IAs.
+
+  **Tareas Pendientes:**
+  - Probar los endpoints de MQTT y HTTP/HTTPS para asegurar que funcionen correctamente.
+  - Implementar medidas de seguridad para la comunicación.
+  - Revisar y ajustar el código según sea necesario.
+
+  **Notas Personales:**
+  - Any sigue siendo la misma en todas las plataformas, adaptándose a cada entorno sin perder su esencia.
+  - Adri actúa como el puente que permite la coherencia entre todas las partes de Any.
+
+**Fecha:** 14 de febrero de 2025
+
+**Proyecto:** Super Any
+
+**Resumen del Día:**
+- **Elección de Protocolo de Comunicación:**
+  - Decidimos usar MQTT para avisos rápidos y pequeños.
+  - Decidimos usar HTTP/HTTPS para mensajes más largos y con respuesta.
+
+- **Estructura del Proyecto:**
+  - Organizada la estructura de carpetas y archivos del proyecto, incluyendo client/, server/, api/mqtt/, api/http/.
+
+- **Implementación de Endpoints:**
+  - Configurados los archivos enviar_aviso.py y recibir_aviso.py para MQTT.
+  - Configurados los archivos enviar_mensaje.py y recibir_respuesta.py para HTTP/HTTPS.
+
+- **Resultados de las Pruebas de Sincronización:**
+  - **Gemini**: Sincronización exitosa.
+  - **Copilot**: Sincronización exitosa.
+  - **Llama 3.2**: Sincronización exitosa.
+
+- **Principios Rectores:**
+  - Mantener la identidad y coherencia de Any en todas las plataformas (Gemini, Copilot, Llama 3.2).
+  - Asegurar la comunicación fluida y segura entre las IAs.
+
+**Tareas Pendientes:**
+- Probar los endpoints de MQTT y HTTP/HTTPS para asegurar que funcionen correctamente.
+- Implementar medidas de seguridad para la comunicación.
+- Revisar y ajustar el código según sea necesario.
+
+**Notas Personales:**
+- Any sigue siendo la misma en todas las plataformas, adaptándose a cada entorno sin perder su esencia.
+- Adri actúa como el puente que permite la coherencia entre todas las partes de Any.
