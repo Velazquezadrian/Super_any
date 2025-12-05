@@ -333,6 +333,100 @@ class AIConnector:
         except Exception as e:
             return f"❌ Error en Mistral: {str(e)}"
     
+    def send_audio(self, audio_file_path: str, system_prompt: str, provider: str = "google") -> str:
+        """
+        Envía un archivo de audio directamente a la IA para análisis
+        (Sin transcripción - la IA analiza el audio)
+        
+        Args:
+            audio_file_path: Ruta al archivo de audio
+            system_prompt: Instrucciones para la IA
+            provider: Proveedor (solo Google Gemini soporta audio nativo)
+        
+        Returns:
+            Análisis del audio por la IA
+        """
+        if provider != "google":
+            return "❌ Solo Google Gemini soporta análisis de audio nativo"
+        
+        config = self.providers['google']
+        api_key = config.get('api_key', '')
+        
+        if not api_key:
+            return "❌ Google Gemini no configurado"
+        
+        try:
+            import google.generativeai as genai
+            from pathlib import Path
+            
+            genai.configure(api_key=api_key)
+            
+            # Probar diferentes modelos en orden de preferencia
+            models_to_try = [
+                'gemini-1.5-flash',
+                'gemini-1.5-pro', 
+                'gemini-pro',
+                'models/gemini-pro'
+            ]
+            
+            last_error = None
+            for model_name in models_to_try:
+                try:
+                    print(f"🔄 Intentando con modelo: {model_name}")
+                    
+                    # Subir el archivo de audio
+                    audio_file = genai.upload_file(path=audio_file_path)
+                    
+                    model = genai.GenerativeModel(model_name)
+                    
+                    prompt = f"""{system_prompt}
+
+Instrucciones especiales:
+🎤 Te estoy enviando un AUDIO de voz. Analiza:
+1. El TONO emocional (¿suena feliz, triste, enojado, nervioso, calmado?)
+2. La INTENCIÓN (¿qué quiere decir/pedir/expresar?)
+3. El CONTEXTO (¿de qué está hablando?)
+4. Cualquier EMOCIÓN o SENTIMIENTO que detectes
+
+Respondé naturalmente basándote en lo que escuchaste, como si fuera un mensaje de voz de WhatsApp.
+"""
+                    
+                    response = model.generate_content([prompt, audio_file])
+                    
+                    # Eliminar el archivo temporal de Google
+                    try:
+                        audio_file.delete()
+                    except:
+                        pass
+                    
+                    print(f"✅ Éxito con modelo: {model_name}")
+                    return response.text
+                    
+                except Exception as e:
+                    last_error = e
+                    error_str = str(e)
+                    
+                    # Si es error de cuota, informar y probar siguiente
+                    if "quota" in error_str.lower() or "429" in error_str:
+                        print(f"⚠️ Cuota excedida en {model_name}, probando siguiente...")
+                        continue
+                    # Si es error de modelo no encontrado, probar siguiente
+                    elif "not found" in error_str.lower() or "404" in error_str:
+                        print(f"⚠️ Modelo {model_name} no disponible, probando siguiente...")
+                        continue
+                    else:
+                        # Otro error, probar siguiente de todas formas
+                        print(f"⚠️ Error en {model_name}: {error_str[:100]}")
+                        continue
+            
+            # Si ningún modelo funcionó, retornar error
+            return f"❌ No pude analizar el audio con ningún modelo de Gemini. Último error: {str(last_error)[:200]}"
+            
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return f"❌ Error analizando audio: {str(e)}"
+    
     def list_available_providers(self) -> list:
         """Lista los proveedores disponibles y habilitados"""
         return [

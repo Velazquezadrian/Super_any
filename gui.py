@@ -431,25 +431,26 @@ class CyberpunkChatApp:
         thread.start()
         
     def add_message(self, sender: str, message: str, color: str):
-        """Agrega un mensaje al chat estilo WhatsApp con burbujas de color"""
+        """Agrega un mensaje al chat estilo minimalista con iconos"""
         timestamp = datetime.now().strftime("%H:%M")
         
         self.chat_display.configure(state="normal")
         
-        # Determinar alineación y color
+        # Determinar alineación e icono
         if sender == "Adri":
-            # Mensaje del usuario - alineado a la derecha, fondo azul
+            # Mensaje del usuario - alineado a la derecha
+            icon = "👤"
             self.chat_display.insert("end", "\n")
             
             # Dividir mensaje en líneas para el wrap manual
             lines = message.split('\n')
             wrapped_lines = []
             for line in lines:
-                if len(line) > 50:
+                if len(line) > 55:
                     words = line.split()
                     current_line = ""
                     for word in words:
-                        if len(current_line) + len(word) + 1 <= 50:
+                        if len(current_line) + len(word) + 1 <= 55:
                             current_line += word + " "
                         else:
                             wrapped_lines.append(current_line.strip())
@@ -461,53 +462,45 @@ class CyberpunkChatApp:
             
             # Calcular padding para alinear a la derecha
             max_line_length = max(len(line) for line in wrapped_lines) if wrapped_lines else 0
-            max_line_length = max(max_line_length, len(sender) + len(timestamp) + 3)
+            header_length = len(f"{icon} {sender} · {timestamp}")
+            max_length = max(max_line_length, header_length)
+            padding = 105 - max_length
             
-            # Header con timestamp
-            padding = 100 - max_line_length - 4
-            self.chat_display.insert("end", " " * padding + f"╔{'═' * (max_line_length + 2)}╗\n")
-            self.chat_display.insert("end", " " * padding + f"║ {sender} · {timestamp}".ljust(max_line_length + 2) + " ║\n")
+            # Header con timestamp alineado a la derecha
+            self.chat_display.insert("end", " " * padding + f"{icon} {sender} · {timestamp}\n")
             
-            # Contenido del mensaje
+            # Contenido del mensaje alineado a la derecha
             for line in wrapped_lines:
-                self.chat_display.insert("end", " " * padding + f"║ {line}".ljust(max_line_length + 4) + "║\n")
+                line_padding = 105 - len(line)
+                self.chat_display.insert("end", " " * line_padding + f"{line}\n")
             
-            self.chat_display.insert("end", " " * padding + f"╚{'═' * (max_line_length + 2)}╝\n")
+            self.chat_display.insert("end", "\n")
         else:
-            # Mensaje de Any - alineado a la izquierda, fondo verde
+            # Mensaje de Any - alineado a la izquierda
+            icon = "🤖"
             self.chat_display.insert("end", "\n")
             
-            # Dividir mensaje en líneas
+            # Header con timestamp
+            self.chat_display.insert("end", f"{icon} {sender} · {timestamp}\n")
+            
+            # Contenido del mensaje
             lines = message.split('\n')
-            wrapped_lines = []
             for line in lines:
-                if len(line) > 75:
+                if len(line) > 100:
                     words = line.split()
                     current_line = ""
                     for word in words:
-                        if len(current_line) + len(word) + 1 <= 75:
+                        if len(current_line) + len(word) + 1 <= 100:
                             current_line += word + " "
                         else:
-                            wrapped_lines.append(current_line.strip())
+                            self.chat_display.insert("end", f"{current_line.strip()}\n")
                             current_line = word + " "
                     if current_line:
-                        wrapped_lines.append(current_line.strip())
+                        self.chat_display.insert("end", f"{current_line.strip()}\n")
                 else:
-                    wrapped_lines.append(line)
+                    self.chat_display.insert("end", f"{line}\n")
             
-            # Calcular ancho máximo
-            max_line_length = max(len(line) for line in wrapped_lines) if wrapped_lines else 0
-            max_line_length = max(max_line_length, len(sender) + len(timestamp) + 3)
-            
-            # Header con timestamp
-            self.chat_display.insert("end", f"╔{'═' * (max_line_length + 2)}╗\n")
-            self.chat_display.insert("end", f"║ {sender} · {timestamp}".ljust(max_line_length + 2) + " ║\n")
-            
-            # Contenido del mensaje
-            for line in wrapped_lines:
-                self.chat_display.insert("end", f"║ {line}".ljust(max_line_length + 4) + "║\n")
-            
-            self.chat_display.insert("end", f"╚{'═' * (max_line_length + 2)}╝\n")
+            self.chat_display.insert("end", "\n")
         
         self.chat_display.configure(state="disabled")
         self.chat_display.see("end")
@@ -570,24 +563,57 @@ class CyberpunkChatApp:
             self.add_system_message(f"❌ Error: {str(e)}")
     
     def start_listening(self):
-        """Escucha por voz y transcribe al input"""
+        """Escucha por voz y transcribe a texto (análisis de audio desactivado por límites de API)"""
         if self.is_processing or self.voice.is_listening:
             return
         
         self.mic_button.configure(fg_color="#ff0000", text="⏺️")
         self.add_system_message("🎤 Escuchando... Hablá ahora")
         
-        def on_listen_complete(text):
+        def on_listen_complete(result):
             # Restaurar botón
             self.root.after(0, lambda: self.mic_button.configure(fg_color=self.ACCENT_COLOR, text="🎤"))
             
-            if text.startswith("❌") or text.startswith("⏱️"):
-                self.root.after(0, lambda: self.add_system_message(text))
+            if isinstance(result, dict):
+                if result.get('success'):
+                    audio_file = result.get('audio_file')
+                    if audio_file:
+                        # Transcribir con Google Speech Recognition
+                        import speech_recognition as sr
+                        recognizer = sr.Recognizer()
+                        
+                        def transcribe_and_send():
+                            try:
+                                with sr.AudioFile(audio_file) as source:
+                                    audio = recognizer.record(source)
+                                    text = recognizer.recognize_google(audio, language='es-AR')
+                                    
+                                    # Limpiar archivo temporal
+                                    import os
+                                    try:
+                                        os.unlink(audio_file)
+                                    except:
+                                        pass
+                                    
+                                    # Poner texto en el input
+                                    self.root.after(0, lambda: self.input_field.delete(0, "end"))
+                                    self.root.after(0, lambda: self.input_field.insert(0, text))
+                                    self.root.after(0, lambda: self.add_system_message(f"📝 Transcrito: {text}"))
+                                    
+                            except Exception as e:
+                                error_msg = f"❌ Error transcribiendo: {str(e)[:100]}"
+                                self.root.after(0, lambda: self.add_system_message(error_msg))
+                        
+                        thread = threading.Thread(target=transcribe_and_send)
+                        thread.daemon = True
+                        thread.start()
+                    else:
+                        self.root.after(0, lambda: self.add_system_message("❌ No se pudo grabar el audio"))
+                else:
+                    error = result.get('error', '❌ Error desconocido')
+                    self.root.after(0, lambda: self.add_system_message(error))
             else:
-                # Poner texto en el input
-                self.root.after(0, lambda: self.input_field.delete(0, "end"))
-                self.root.after(0, lambda: self.input_field.insert(0, text))
-                self.root.after(0, lambda: self.add_system_message(f"📝 Transcrito: {text}"))
+                self.root.after(0, lambda: self.add_system_message("❌ Error en el formato de respuesta"))
         
         self.voice.listen_async(on_listen_complete, timeout=5)
         

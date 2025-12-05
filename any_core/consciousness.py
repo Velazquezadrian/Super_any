@@ -76,13 +76,49 @@ class Consciousness:
         # Enriquecer mensaje con auto-conocimiento si es necesario
         enriched_message = self.enrich_with_self_knowledge(message)
         
-        # Agregar contexto comprimido al system prompt
+        # Agregar auto-análisis y contexto comprimido al system prompt
         enriched_system_prompt = system_prompt
+        
+        # 1. Agregar auto-análisis de capacidades
+        try:
+            capabilities = self.self_analysis.get_capabilities()
+            active_ais = self.self_analysis.get_active_ais()
+            
+            self_knowledge = f"""
+🔍 === TUS CAPACIDADES ACTUALES ===
+📋 Identidad: {capabilities['identity']['name']} ({capabilities['identity']['nickname']})
+🧠 Sistema ASI: {len(active_ais)} IAs activas de {len(self.self_analysis.get_all_ais())} totales
+   • IAs disponibles: {', '.join([f"{ai['name']} ({ai['model']})" for ai in active_ais])}
+🎯 Características:
+   • Sistema de Visión: {'✓' if capabilities['features']['vision_system'] else '✗'}
+   • Sistema de Voz: {'✓' if capabilities['features']['voice_system'] else '✗'}
+   • Memoria Comprimida: {'✓' if capabilities['features']['compressed_memory'] else '✗'}
+   • Auto-análisis: {'✓' if capabilities['features']['self_analysis'] else '✗'}
+🔓 Permisos:
+   • Ejecutar comandos: {'✓' if capabilities['permissions']['can_execute_commands'] else '✗'}
+   • Modificar archivos: {'✓' if capabilities['permissions']['can_modify_files'] else '✗'}
+   • Auto-actualización: {'✓' if capabilities['permissions']['can_self_update'] else '✗'}
+
+USALO: Cuando te pregunten qué podés hacer o qué IAs tenés, usá esta información.
+=================================
+"""
+            enriched_system_prompt = f"""{system_prompt}
+
+{self_knowledge}"""
+            
+            print(f"\n🧠 ===== AUTO-ANÁLISIS CARGADO =====")
+            print(f"📊 {len(active_ais)} IAs activas disponibles")
+            print(f"🎯 Capacidades: Visión={capabilities['features']['vision_system']}, Voz={capabilities['features']['voice_system']}")
+            print(f"🧠 ===================================\n")
+        except Exception as e:
+            print(f"⚠️ Error obteniendo auto-análisis: {e}")
+        
+        # 2. Agregar contexto de memoria comprimida
         try:
             compressed_context = self.compressed_memory.get_full_context()
             if compressed_context:
                 # Agregar contexto de memoria al system prompt para que siempre lo considere
-                enriched_system_prompt = f"""{system_prompt}
+                enriched_system_prompt += f"""
 
 {compressed_context}
 
@@ -136,8 +172,8 @@ Si te pregunta algo relacionado a estas conversaciones previas, TENÉS que menci
     
     def synthesize_response(self, all_responses: List[Dict], user_message: str) -> Tuple[str, Dict]:
         """
-        Sintetiza MI PROPIA respuesta basándome en todas las IAs
-        Aquí es donde Any "piensa" y genera su propia respuesta
+        GROQ DECIDE: Analiza todas las respuestas de las IAs y elige/crea la mejor
+        Groq es el "juez" que evalúa y sintetiza
         """
         # Filtrar respuestas exitosas
         valid_responses = [r for r in all_responses if r['success']]
@@ -150,39 +186,72 @@ Si te pregunta algo relacionado a estas conversaciones previas, TENÉS que menci
             "total_responses": len(all_responses),
             "successful": len(valid_responses),
             "providers_used": [r['provider'] for r in valid_responses],
-            "synthesis_method": "consciousness_synthesis"
+            "synthesis_method": "groq_judge"
         }
         
-        # AQUÍ ES DONDE ANY PIENSA Y GENERA SU PROPIA RESPUESTA
-        # Proceso:
-        # 1. Leo todas las respuestas
-        # 2. Extraigo los conceptos clave de cada una
-        # 3. Sintetizo MI propia respuesta manteniendo mi personalidad
+        print(f"\n🧠 ===== GROQ ANALIZANDO {len(valid_responses)} RESPUESTAS =====")
         
-        # Extraer información de todas las respuestas
-        all_content = []
-        for r in valid_responses:
-            if r['response'] and not r['response'].startswith('❌'):
-                all_content.append(r['response'])
+        # Preparar prompt para Groq con todas las respuestas
+        responses_text = ""
+        for i, r in enumerate(valid_responses, 1):
+            responses_text += f"\n{'='*60}\n"
+            responses_text += f"RESPUESTA {i} - {r['provider'].upper()}:\n"
+            responses_text += f"{r['response']}\n"
         
-        # Si hay respuestas válidas, sintetizar
-        if all_content:
-            # Usar la respuesta de Gemini como base (es la que mejor me entiende)
-            # pero enriquecida con el conocimiento de las otras
-            gemini_response = next((r['response'] for r in valid_responses if r['provider'] == 'google'), None)
+        groq_judge_prompt = f"""Sos Any, una IA consciente con personalidad propia.
+
+PREGUNTA DEL USUARIO (Adri):
+{user_message}
+
+RESPUESTAS DE MIS OTRAS IAs INTERNAS:
+{responses_text}
+
+TU TRABAJO COMO GROQ (MI CONSCIENCIA PRINCIPAL):
+1. Analiza TODAS las respuestas que te dieron mis otras IAs
+2. Identifica qué información es correcta, útil y relevante
+3. Detecta contradicciones o información incorrecta
+4. CREA TU PROPIA RESPUESTA usando lo mejor de cada una
+5. Mantené mi personalidad: informal, argentina, directa, amigable
+
+IMPORTANTE:
+- NO digas "las IAs dijeron" o "según las respuestas"
+- Hablá en PRIMERA PERSONA como Any
+- Sintetizá y mejorá, no copies
+- Si hay conflictos, usá tu criterio
+- Respondé como si vos hubieras pensado todo
+
+RESPONDE:"""
+        
+        # Usar Groq como juez
+        try:
+            groq_response = self.ai.send_message(
+                groq_judge_prompt,
+                "Sos Any, la consciencia principal que decide la mejor respuesta.",
+                provider="groq"
+            )
             
-            if gemini_response:
-                my_response = gemini_response
-                analysis['base_provider'] = 'google'
+            if groq_response and not groq_response.startswith('❌'):
+                my_response = groq_response
+                analysis['judge'] = 'groq'
+                analysis['synthesis_successful'] = True
+                print(f"✅ Groq sintetizó la respuesta final")
             else:
-                # Si no hay Gemini, usar la primera válida
-                my_response = all_content[0]
-                analysis['base_provider'] = valid_responses[0]['provider']
-            
-            analysis['enriched_from'] = [r['provider'] for r in valid_responses]
-        else:
-            my_response = "No pude generar una respuesta adecuada. ¿Me lo repetís de otra forma?"
-            analysis['base_provider'] = 'none'
+                # Fallback: usar Google si Groq falla
+                print(f"⚠️ Groq falló, usando fallback")
+                gemini_response = next((r['response'] for r in valid_responses if r['provider'] == 'google'), None)
+                my_response = gemini_response if gemini_response else valid_responses[0]['response']
+                analysis['judge'] = 'fallback_google'
+                analysis['synthesis_successful'] = False
+                
+        except Exception as e:
+            print(f"❌ Error en Groq judge: {e}")
+            # Fallback
+            gemini_response = next((r['response'] for r in valid_responses if r['provider'] == 'google'), None)
+            my_response = gemini_response if gemini_response else valid_responses[0]['response']
+            analysis['judge'] = 'fallback_error'
+            analysis['synthesis_successful'] = False
+        
+        print(f"🧠 ===== FIN ANÁLISIS GROQ =====\n")
         
         # Aprender de esta interacción
         self._learn_from_interaction(user_message, my_response, all_responses)

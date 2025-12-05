@@ -152,19 +152,23 @@ class VoiceSystem:
                 self.tts_engine.say(text)
                 self.tts_engine.runAndWait()
     
-    def listen(self, timeout: int = 5, phrase_time_limit: int = 10) -> str:
+    def listen(self, timeout: int = 5, phrase_time_limit: int = 10, save_audio: bool = True) -> dict:
         """
-        Escucha y convierte voz a texto
+        Escucha y guarda el audio para análisis directo de IA (sin transcribir)
         
         Args:
             timeout: Segundos a esperar por voz
             phrase_time_limit: Máximo de segundos de la frase
+            save_audio: Si True, guarda el audio en archivo temporal
             
         Returns:
-            Texto reconocido o mensaje de error
+            Dict con 'audio_file' (ruta al archivo de audio)
         """
         if not self.recognizer or not self.microphone:
-            return "❌ Micrófono no disponible"
+            return {
+                "error": "❌ Micrófono no disponible",
+                "audio_file": None
+            }
         
         try:
             self.is_listening = True
@@ -177,24 +181,174 @@ class VoiceSystem:
                     phrase_time_limit=phrase_time_limit
                 )
             
-            print("🔄 Procesando audio...")
+            print("💾 Guardando audio para análisis de IA...")
             
-            # Intentar reconocer en español
-            try:
-                text = self.recognizer.recognize_google(audio, language='es-AR')
-                return text
-            except:
-                # Si falla español argentino, intentar español general
-                text = self.recognizer.recognize_google(audio, language='es-ES')
-                return text
+            # Guardar audio en archivo temporal
+            audio_file = None
+            if save_audio:
+                try:
+                    import tempfile
+                    import wave
+                    
+                    # Crear archivo temporal WAV
+                    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.wav')
+                    audio_file = temp_file.name
+                    temp_file.close()
+                    
+                    # Guardar audio en formato WAV
+                    with wave.open(audio_file, 'wb') as wf:
+                        wf.setnchannels(1)  # Mono
+                        wf.setsampwidth(2)  # 16-bit
+                        wf.setframerate(audio.sample_rate)
+                        wf.writeframes(audio.frame_data)
+                    
+                    print(f"✅ Audio guardado: {audio_file}")
+                    
+                except Exception as e:
+                    print(f"⚠️ Error guardando audio: {e}")
+                    import traceback
+                    traceback.print_exc()
+            
+            return {
+                "audio_file": audio_file,
+                "success": True
+            }
                 
         except Exception as e:
             if "timed out" in str(e).lower():
-                return "⏱️ No escuché nada"
+                return {
+                    "error": "⏱️ No escuché nada",
+                    "audio_file": None,
+                    "success": False
+                }
             else:
-                return f"❌ Error: {str(e)}"
+                return {
+                    "error": f"❌ Error: {str(e)}",
+                    "audio_file": None,
+                    "success": False
+                }
         finally:
             self.is_listening = False
+    
+    def _analyze_audio(self, audio) -> dict:
+        """
+        Analiza características del audio (volumen, duración, tono estimado)
+        
+        Returns:
+            Dict con análisis: volumen, duración, tono, emoción estimada
+        """
+        try:
+            import numpy as np
+            
+            # Convertir audio a array numpy de forma segura
+            try:
+                audio_data = np.frombuffer(audio.frame_data, dtype=np.int16)
+            except Exception as e:
+                print(f"⚠️ Error convirtiendo audio a numpy: {e}")
+                raise
+            
+            # Calcular duración
+            sample_rate = audio.sample_rate if hasattr(audio, 'sample_rate') else 16000
+            duration = len(audio_data) / sample_rate if len(audio_data) > 0 else 0
+            
+            if duration == 0 or len(audio_data) == 0:
+                raise Exception("Audio vacío")
+            
+            # Calcular volumen promedio (RMS) con manejo seguro
+            audio_float = audio_data.astype(float)
+            rms = np.sqrt(np.mean(audio_float**2))
+            
+            # Evitar log(0) y valores negativos
+            if rms <= 0:
+                rms = 1
+            volume_db = 20 * np.log10(rms)
+            
+            # Clasificar volumen con rangos más realistas
+            if volume_db < 30:
+                volume_level = "Muy Bajo"
+            elif volume_db < 45:
+                volume_level = "Bajo"
+            elif volume_db < 60:
+                volume_level = "Normal"
+            elif volume_db < 75:
+                volume_level = "Alto"
+            else:
+                volume_level = "Muy Alto"
+            
+            # Estimar velocidad de habla (cambios de energía)
+            if len(audio_data) > 1:
+                energy_changes = np.sum(np.abs(np.diff(audio_data))) / len(audio_data)
+            else:
+                energy_changes = 0
+            
+            if energy_changes > 100:
+                speech_rate = "Rápido"
+            elif energy_changes > 50:
+                speech_rate = "Normal"
+            else:
+                speech_rate = "Lento"
+            
+            # Estimar tono general
+            positive_samples = np.sum(audio_data > 0)
+            positive_ratio = positive_samples / len(audio_data) if len(audio_data) > 0 else 0.5
+            
+            if positive_ratio > 0.55:
+                tone_estimate = "Alto"
+            elif positive_ratio < 0.45:
+                tone_estimate = "Bajo"
+            else:
+                tone_estimate = "Medio"
+            
+            # Estimar emoción combinando indicadores
+            emotion = self._estimate_emotion(volume_level, speech_rate, tone_estimate, duration)
+            
+            return {
+                "duration": duration,
+                "volume_db": volume_db,
+                "volume_level": volume_level,
+                "speech_rate": speech_rate,
+                "tone_estimate": tone_estimate,
+                "emotion_estimate": emotion
+            }
+            
+        except Exception as e:
+            print(f"⚠️ Error en análisis de audio: {e}")
+            import traceback
+            traceback.print_exc()
+            raise
+    
+    def _estimate_emotion(self, volume, rate, tone, duration) -> str:
+        """Estima la emoción probable basado en características de audio"""
+        
+        # Feliz/Emocionado: Alto volumen, rápido, tono alto
+        if "Alto" in volume and "Rápido" in rate and "Alto" in tone:
+            return "Feliz/Emocionado 😄"
+        
+        # Enojado: Muy alto volumen, rápido, tono variable
+        if "Muy Alto" in volume and "Rápido" in rate:
+            return "Enojado/Frustrado 😠"
+        
+        # Triste: Bajo volumen, lento, tono bajo
+        if "Bajo" in volume and "Lento" in rate and "Bajo" in tone:
+            return "Triste/Desanimado 😔"
+        
+        # Nervioso: Rápido, volumen variable
+        if "Rápido" in rate and duration < 3:
+            return "Nervioso/Ansioso 😰"
+        
+        # Cansado: Lento, bajo volumen
+        if "Lento" in rate and "Bajo" in volume:
+            return "Cansado/Aburrido 😴"
+        
+        # Sorprendido: Volumen alto, tono alto, corto
+        if "Alto" in volume and "Alto" in tone and duration < 2:
+            return "Sorprendido 😮"
+        
+        # Calmado: Volumen normal, velocidad normal
+        if "Normal" in volume and "Normal" in rate:
+            return "Calmado/Neutral 😊"
+        
+        return "Neutral 😐"
     
     def listen_async(self, callback, timeout: int = 5):
         """
