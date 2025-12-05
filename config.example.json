@@ -1,0 +1,100 @@
+{
+  "app_name": "Any - Independent AI Assistant",
+  "version": "1.0.0",
+  "identity": {
+    "name": "Anya",
+    "nickname": "Any",
+    "personality_file": "data/personality/prompt.txt",
+    "memory_file": "data/personality/memoria.txt"
+  },
+  "ai_providers": {
+    "ollama": {
+      "enabled": false,
+      "api_url": "http://localhost:11434",
+      "model": "llama3.2",
+      "type": "local",
+      "cost": "free"
+    },
+    "huggingface": {
+      "enabled": false,
+      "api_key": "YOUR_HUGGINGFACE_TOKEN_HERE",
+      "model": "mistralai/Mistral-7B-Instruct-v0.2",
+      "type": "api",
+      "cost": "free"
+    },
+    "cohere": {
+      "enabled": false,
+      "api_key": "YOUR_COHERE_API_KEY_HERE",
+      "model": "command",
+      "type": "api",
+      "cost": "free_tier"
+    },
+    "together": {
+      "enabled": false,
+      "api_key": "YOUR_TOGETHER_API_KEY_HERE",
+      "model": "meta-llama/Llama-3-70b-chat-hf",
+      "type": "api",
+      "cost": "free_tier"
+    },
+    "openai": {
+      "enabled": false,
+      "api_key": "YOUR_OPENAI_API_KEY_HERE",
+      "model": "gpt-4",
+      "type": "api",
+      "cost": "paid"
+    },
+    "anthropic": {
+      "enabled": false,
+      "api_key": "YOUR_ANTHROPIC_API_KEY_HERE",
+      "model": "claude-3-5-sonnet-20241022",
+      "type": "api",
+      "cost": "paid"
+    },
+    "google": {
+      "enabled": true,
+      "api_key": "YOUR_GOOGLE_GEMINI_API_KEY_HERE",
+      "model": "gemini-1.5-flash",
+      "type": "api",
+      "cost": "free_tier"
+    },
+    "groq": {
+      "enabled": false,
+      "api_key": "YOUR_GROQ_API_KEY_HERE",
+      "model": "llama-3.1-70b-versatile",
+      "type": "api",
+      "cost": "free"
+    },
+    "perplexity": {
+      "enabled": false,
+      "api_key": "YOUR_PERPLEXITY_API_KEY_HERE",
+      "model": "llama-3.1-sonar-large-128k-online",
+      "type": "api",
+      "cost": "pro"
+    },
+    "deepseek": {
+      "enabled": false,
+      "api_key": "YOUR_DEEPSEEK_API_KEY_HERE",
+      "model": "deepseek-chat",
+      "type": "api",
+      "cost": "free_tier"
+    },
+    "mistral": {
+      "enabled": false,
+      "api_key": "YOUR_MISTRAL_API_KEY_HERE",
+      "model": "mistral-small-latest",
+      "type": "api",
+      "cost": "free_tier"
+    }
+  },
+  "memory": {
+    "auto_save": true,
+    "max_history": 1000,
+    "conversation_log": "data/memory/conversations.json"
+  },
+  "permissions": {
+    "can_execute_commands": true,
+    "can_modify_files": true,
+    "can_self_update": true
+  },
+  "default_provider": "google"
+}
