@@ -15,6 +15,13 @@ Pillow>=10.0.0
 # Vision (captura de pantalla)
 pyautogui>=0.9.54
 
+# Voice (voz - TTS y STT)
+pyttsx3>=2.90
+SpeechRecognition>=3.10.0
+pyaudio>=0.2.13
+gTTS>=2.5.0
+pygame>=2.5.0
+
 # Utilities
 python-dotenv>=1.0.0
 requests>=2.31.0

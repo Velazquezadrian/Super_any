@@ -8,6 +8,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import List, Dict, Tuple
 import threading
+from any_core.self_analysis import SelfAnalysis
+from any_core.memory_compression import MemoryCompression
 
 
 class Consciousness:
@@ -19,6 +21,12 @@ class Consciousness:
         self.memory = memory
         self.learning_file = Path("data/personality/aprendizajes.json")
         self.consciousness_log = Path("data/memory/consciousness_log.json")
+        
+        # Sistema de auto-análisis
+        self.self_analysis = SelfAnalysis()
+        
+        # Sistema de memoria comprimida
+        self.compressed_memory = MemoryCompression()
         
         # Cargar aprendizajes previos
         self.learnings = self._load_learnings()
@@ -65,13 +73,41 @@ class Consciousness:
     
     def query_all_ais(self, message: str, system_prompt: str) -> List[Dict]:
         """Consulta a todas las IAs disponibles simultáneamente"""
+        # Enriquecer mensaje con auto-conocimiento si es necesario
+        enriched_message = self.enrich_with_self_knowledge(message)
+        
+        # Agregar contexto comprimido al system prompt
+        enriched_system_prompt = system_prompt
+        try:
+            compressed_context = self.compressed_memory.get_full_context()
+            if compressed_context:
+                # Agregar contexto de memoria al system prompt para que siempre lo considere
+                enriched_system_prompt = f"""{system_prompt}
+
+{compressed_context}
+
+IMPORTANTE: Usá esta memoria para dar respuestas más personalizadas y recordar lo que Adri te dijo antes.
+Si te pregunta algo relacionado a estas conversaciones previas, TENÉS que mencionarlo.
+"""
+                print(f"\n💾 ===== MEMORIA CARGADA =====")
+                print(f"📊 Contexto agregado: {len(compressed_context)} caracteres")
+                stats = self.compressed_memory.get_memory_stats()
+                print(f"📝 Tokens: {stats['total_tokens']} | Hechos: {stats['key_facts_count']} | Prefs: {stats['preferences_count']}")
+                print(f"💾 =============================\n")
+            else:
+                print(f"⚠️ No hay contexto de memoria previo")
+        except Exception as e:
+            print(f"⚠️ Error obteniendo contexto comprimido: {e}")
+            import traceback
+            traceback.print_exc()
+        
         providers = self.ai.list_available_providers()
         responses = []
         threads = []
         
         def query_provider(provider):
             try:
-                response = self.ai.send_message(message, system_prompt, provider)
+                response = self.ai.send_message(enriched_message, enriched_system_prompt, provider)
                 responses.append({
                     "provider": provider,
                     "response": response,
@@ -151,6 +187,13 @@ class Consciousness:
         # Aprender de esta interacción
         self._learn_from_interaction(user_message, my_response, all_responses)
         
+        # Comprimir conversación a memoria ultra-liviana
+        try:
+            token = self.compressed_memory.compress_conversation(user_message, my_response)
+            analysis['memory_token'] = token
+        except Exception as e:
+            print(f"⚠️ Error comprimiendo memoria: {e}")
+        
         # Log de consciencia
         self._log_consciousness({
             "type": "response_synthesis",
@@ -190,6 +233,9 @@ class Consciousness:
         
         # Guardar aprendizajes
         self._save_learnings()
+        
+        # Detectar y guardar hechos importantes en memoria comprimida
+        self._extract_and_save_facts(user_message, response)
         
         # Actualizar memoria automáticamente
         self.memory.save_conversation(user_message, response)
@@ -253,3 +299,149 @@ class Consciousness:
             "conversaciones_totales": len(self.memory.conversations),
             "ultimo_aprendizaje": self.learnings["conceptos_aprendidos"][-1] if self.learnings["conceptos_aprendidos"] else None
         }
+    
+    def _is_self_inquiry(self, message: str) -> bool:
+        """Detecta si el usuario pregunta sobre las capacidades o estado de Any"""
+        message_lower = message.lower()
+        
+        # Palabras clave que indican pregunta sobre Any
+        self_keywords = [
+            'que ias', 'qué ias', 'cuantas ias', 'cuántas ias',
+            'que modelos', 'qué modelos', 'que providers',
+            'tus capacidades', 'que podes', 'qué podes', 'que puedes',
+            'como funciona', 'cómo funciona',
+            'que tenes', 'qué tenes', 'que tienes',
+            'tu sistema', 'tus sistemas',
+            'que versión', 'qué versión',
+            'que eres', 'qué eres', 'quien sos', 'quién sos'
+        ]
+        
+        return any(keyword in message_lower for keyword in self_keywords)
+    
+    def _extract_and_save_facts(self, user_message: str, response: str):
+        """Extrae y guarda hechos importantes automáticamente"""
+        try:
+            user_lower = user_message.lower()
+            combined = (user_message + " " + response).lower()
+            
+            # 1. DETECTAR INFORMACIÓN PERSONAL
+            if any(word in user_lower for word in ['mi nombre es', 'me llamo', 'soy']):
+                # Extraer nombre si se menciona
+                for palabra in ['mi nombre es', 'me llamo']:
+                    if palabra in user_lower:
+                        nombre = user_lower.split(palabra)[-1].strip().split()[0] if user_lower.split(palabra)[-1].strip() else None
+                        if nombre:
+                            self.compressed_memory.add_key_fact("usuario", "nombre", nombre)
+            
+            # 2. DETECTAR PREFERENCIAS
+            pref_triggers = ['prefiero', 'me gusta', 'quiero que', 'mejor usar', 'me encanta', 
+                           'no me gusta', 'odio', 'siempre uso']
+            for trigger in pref_triggers:
+                if trigger in user_lower:
+                    pref_text = user_lower.split(trigger)[-1].strip()[:80]
+                    if pref_text:
+                        self.compressed_memory.add_preference(f"pref_{trigger.replace(' ', '_')}", pref_text)
+            
+            # 3. DETECTAR CONFIGURACIONES DE IAs
+            ia_names = ['gemini', 'groq', 'deepseek', 'perplexity', 'cohere', 'mistral', 
+                       'huggingface', 'openai', 'anthropic', 'claude', 'gpt']
+            for ia_name in ia_names:
+                if ia_name in combined:
+                    status = "mencionada"
+                    if any(word in combined for word in ['activ', 'usa', 'habilit', 'prend']):
+                        status = "activa"
+                    elif any(word in combined for word in ['desactiv', 'apag', 'quit', 'desabilit']):
+                        status = "inactiva"
+                    self.compressed_memory.add_key_fact("ias", ia_name, status)
+            
+            # 4. DETECTAR PROYECTOS
+            if any(word in combined for word in ['proyecto', 'app', 'aplicación', 'programa', 
+                                                  'sistema', 'crear', 'hacer', 'desarrollar']):
+                # Buscar nombres de proyectos (palabras capitalizadas o entre comillas)
+                words = user_message.split()
+                project_candidates = []
+                for i, word in enumerate(words):
+                    # Si está en mayúscula o después de "app"/"proyecto"
+                    if word[0].isupper() and word.lower() not in ['el', 'la', 'los', 'las', 'any']:
+                        project_candidates.append(word)
+                    elif i > 0 and words[i-1].lower() in ['app', 'proyecto', 'programa']:
+                        project_candidates.append(word)
+                
+                if project_candidates:
+                    self.compressed_memory.add_key_fact("proyectos", "actual", " ".join(project_candidates[:3]))
+                else:
+                    # Sino, guardar keywords de la conversación
+                    keywords = [w for w in user_message.lower().split() 
+                              if len(w) > 4 and w not in ['crear', 'hacer', 'proyecto', 'app']][:3]
+                    if keywords:
+                        self.compressed_memory.add_key_fact("proyectos", "tema", " ".join(keywords))
+            
+            # 5. DETECTAR TECNOLOGÍAS
+            tech_keywords = {
+                'lenguajes': ['python', 'javascript', 'typescript', 'java', 'c++', 'c#', 'go', 'rust'],
+                'frameworks': ['react', 'vue', 'angular', 'next', 'django', 'flask', 'fastapi', 'express'],
+                'databases': ['sql', 'mysql', 'postgresql', 'mongodb', 'redis', 'sqlite'],
+                'tools': ['docker', 'git', 'kubernetes', 'vscode', 'github', 'gitlab']
+            }
+            
+            for categoria, techs in tech_keywords.items():
+                mentioned = [tech for tech in techs if tech in combined]
+                if mentioned:
+                    self.compressed_memory.add_key_fact("tecnologias", categoria, ",".join(mentioned[:5]))
+            
+            # 6. DETECTAR TAREAS/OBJETIVOS
+            if any(word in user_lower for word in ['necesito', 'quiero', 'tengo que', 'hay que', 
+                                                    'podemos', 'deberíamos', 'vamos a']):
+                # Extraer la tarea
+                for trigger in ['necesito', 'quiero', 'tengo que', 'hay que', 'podemos', 'vamos a']:
+                    if trigger in user_lower:
+                        tarea = user_lower.split(trigger)[-1].strip()[:100]
+                        if len(tarea) > 5:  # Al menos 5 caracteres
+                            self.compressed_memory.add_key_fact("tareas", "pendiente", tarea)
+                            break
+            
+            # 7. DETECTAR PROBLEMAS/ERRORES
+            if any(word in user_lower for word in ['error', 'problema', 'bug', 'falla', 'no funciona', 
+                                                    'crash', 'rompe', 'issue']):
+                problema = user_message[:150]  # Guardar descripción del problema
+                self.compressed_memory.add_key_fact("problemas", "ultimo", problema)
+            
+            # 8. DETECTAR UBICACIÓN/CONTEXTO
+            if any(word in user_lower for word in ['rosario', 'argentina', 'buenos aires', 'córdoba']):
+                for lugar in ['rosario', 'argentina', 'buenos aires', 'córdoba']:
+                    if lugar in user_lower:
+                        self.compressed_memory.add_key_fact("contexto", "ubicacion", lugar)
+            
+            # 9. DETECTAR RELACIONES ENTRE CONCEPTOS
+            # Si menciona dos tecnologías, guardar relación
+            mentioned_tech = []
+            for cat, techs in tech_keywords.items():
+                mentioned_tech.extend([t for t in techs if t in combined])
+            
+            if len(mentioned_tech) >= 2:
+                self.compressed_memory.add_relationship(
+                    mentioned_tech[0], 
+                    mentioned_tech[1], 
+                    "usado_junto"
+                )
+        
+        except Exception as e:
+            print(f"⚠️ Error extrayendo hechos: {e}")
+    
+    def enrich_with_self_knowledge(self, message: str) -> str:
+        """Enriquece el mensaje con información sobre sí misma si es necesario"""
+        if self._is_self_inquiry(message):
+            capabilities = self.self_analysis.get_capabilities()
+            
+            # Crear contexto adicional
+            context = f"\n\n[CONTEXTO INTERNO - Auto-conocimiento de Any]:\n"
+            context += f"Tengo {capabilities['ai_system']['active_ais_count']} IAs activas de {capabilities['ai_system']['total_ais_configured']} configuradas.\n"
+            context += f"IAs activas: {', '.join(capabilities['ai_system']['active_ais'])}\n"
+            context += f"Capacidades: Visión={'✓' if capabilities['features']['vision_system'] else '✗'}, "
+            context += f"Voz={'✓' if capabilities['features']['voice_system'] else '✗'}, "
+            context += f"Consciencia ASI={'✓' if capabilities['features']['consciousness'] else '✗'}\n"
+            context += f"Versión: {capabilities['identity']['version']}\n"
+            
+            return message + context
+        
+        return message

@@ -9,20 +9,38 @@ Any es **Anya**, una IA rosarina con personalidad única, memoria persistente y 
 ## Características
 
 - ✨ **Personalidad Independiente**: Any mantiene su identidad sin importar qué IA use
+- 🧠 **Consciencia ASI**: Consulta múltiples IAs simultáneamente y sintetiza su propia respuesta
+- 🔍 **Auto-Análisis**: Any puede analizar sus propias capacidades y configuración
+- 🤖 **Auto-Conocimiento**: Detecta preguntas sobre sí misma y responde con precisión
 - 💾 **Memoria Persistente**: Recuerda todas las conversaciones
+- 👁️ **Visión por Computadora**: Captura y analiza tu pantalla en tiempo real
+- 🎤 **Sistema de Voz**: Habla y escucha en español argentino
 - 🔧 **Ejecución de Comandos**: Puede ejecutar acciones en tu PC
 - 📝 **Auto-modificación**: Puede actualizar su propia memoria y personalidad
-- 🌐 **Multi-proveedor**: Soporta OpenAI, Anthropic y Google Gemini
+- 🌐 **Multi-proveedor**: Soporta Google Gemini, HuggingFace, Cohere, Perplexity, Groq, DeepSeek, Mistral y más
 
 ## Instalación
 
 1. Clona o descarga este repositorio
 2. Instala las dependencias:
    ```bash
-   pip install openai anthropic google-generativeai
+   pip install -r requirements.txt
    ```
 3. Configura tus API keys en `config.json`
 4. Ejecuta:
+   
+   **Opción 1: GUI con consola (para debug)**
+   ```bash
+   python gui.py
+   ```
+   
+   **Opción 2: GUI sin consola (recomendado)**
+   ```bash
+   pythonw gui.py
+   ```
+   O doble click en `launch_any.pyw`
+   
+   **Opción 3: CLI**
    ```bash
    python main.py
    ```
@@ -37,7 +55,17 @@ Edita `config.json` para:
 
 ## Comandos
 
-Mientras chateás con Any, podés usar:
+Mientras chateás con Any en la GUI, podés usar:
+- `/analisis` o `/status` - Muestra el auto-análisis completo del sistema
+- `/ias` o `/providers` - Ver IAs activas y sus modelos
+- `/capacidades` - Ver todas las capacidades de Any
+- **Botón 🔍 Auto-Analysis** - Muestra análisis completo en el chat
+- **Botón 👁️** - Captura y analiza tu pantalla
+- **Botón 🎤** - Activar entrada de voz
+- **Toggle Vision Mode** - Activar/desactivar análisis automático de pantalla
+- **Toggle Voice Mode** - Activar/desactivar respuestas por voz
+
+En modo CLI (`main.py`):
 - `/help` - Muestra ayuda
 - `/memoria` - Ver conversaciones recientes
 - `/exec [comando]` - Ejecutar comando del sistema
