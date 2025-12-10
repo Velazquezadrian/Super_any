@@ -66,6 +66,8 @@ class AIConnector:
                 return self._connect_deepseek(message, system_prompt)
             elif provider == "mistral":
                 return self._connect_mistral(message, system_prompt)
+            elif provider == "microsoft_copilot":
+                return self._connect_microsoft_copilot(message, system_prompt)
             else:
                 return f"Error: Proveedor '{provider}' no implementado"
         except Exception as e:
@@ -143,6 +145,7 @@ class AIConnector:
         """Conecta con Google Gemini API"""
         config = self.providers['google']
         api_key = config.get('api_key', '')
+        model_name = config.get('model', 'gemini-2.5-flash')
         
         if not api_key:
             return "❌ Google Gemini no configurado. Agregá tu API key en config.json"
@@ -151,23 +154,25 @@ class AIConnector:
             import google.generativeai as genai
             genai.configure(api_key=api_key)
             
-            # Listar modelos disponibles y usar el primero que funcione
+            # Intentar con el modelo configurado
             try:
-                available_models = genai.list_models()
-                for model_info in available_models:
-                    if 'generateContent' in model_info.supported_generation_methods:
-                        model = genai.GenerativeModel(model_info.name)
-                        full_prompt = f"{system_prompt}\n\nUsuario: {message}"
-                        response = model.generate_content(full_prompt)
-                        return response.text
-            except:
-                pass
-            
-            # Si lo anterior falla, intentar directamente con gemini-pro
-            model = genai.GenerativeModel('gemini-pro')
-            full_prompt = f"{system_prompt}\n\nUsuario: {message}"
-            response = model.generate_content(full_prompt)
-            return response.text
+                model = genai.GenerativeModel(model_name)
+                full_prompt = f"{system_prompt}\n\nUsuario: {message}"
+                response = model.generate_content(full_prompt)
+                return response.text
+            except Exception as e1:
+                # Fallback a gemini-2.5-flash
+                try:
+                    model = genai.GenerativeModel('gemini-2.5-flash')
+                    full_prompt = f"{system_prompt}\n\nUsuario: {message}"
+                    response = model.generate_content(full_prompt)
+                    return response.text
+                except Exception as e2:
+                    # Último fallback a models/gemini-2.5-flash
+                    model = genai.GenerativeModel('models/gemini-2.5-flash')
+                    full_prompt = f"{system_prompt}\n\nUsuario: {message}"
+                    response = model.generate_content(full_prompt)
+                    return response.text
             
         except Exception as e:
             return f"❌ Error con Google Gemini: {str(e)}"
@@ -276,7 +281,8 @@ class AIConnector:
             if response.status_code == 200:
                 return response.json()['choices'][0]['message']['content']
             else:
-                return f"❌ Error Perplexity: {response.status_code}"
+                error_detail = response.text if hasattr(response, 'text') else ''
+                return f"❌ Error Perplexity {response.status_code}: {error_detail[:200]}"
         except Exception as e:
             return f"❌ Error en Perplexity: {str(e)}"
     
@@ -426,6 +432,58 @@ Respondé naturalmente basándote en lo que escuchaste, como si fuera un mensaje
             import traceback
             traceback.print_exc()
             return f"❌ Error analizando audio: {str(e)}"
+    
+    def _connect_microsoft_copilot(self, message: str, system_prompt: str) -> str:
+        """Conecta con Microsoft Copilot usando EdgeGPT (Bing Chat)"""
+        config = self.providers['microsoft_copilot']
+        cookie_path = config.get('cookie_path', '')
+        
+        if not cookie_path:
+            return "❌ Microsoft Copilot no configurado. Necesitás exportar las cookies de Bing. Instrucciones: https://github.com/acheong08/EdgeGPT#setup"
+        
+        try:
+            import asyncio
+            from EdgeGPT.EdgeGPT import Chatbot, ConversationStyle
+            import os
+            
+            # Verificar que el archivo de cookies existe
+            if not os.path.exists(cookie_path):
+                return f"❌ Archivo de cookies no encontrado: {cookie_path}"
+            
+            async def get_response():
+                bot = await Chatbot.create(cookie_path=cookie_path)
+                
+                # Combinar system prompt con mensaje
+                full_message = f"{system_prompt}\n\nUsuario: {message}"
+                
+                response = await bot.ask(
+                    prompt=full_message,
+                    conversation_style=ConversationStyle.balanced,
+                    simplify_response=True
+                )
+                
+                await bot.close()
+                return response
+            
+            # Ejecutar la corrutina
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            result = loop.run_until_complete(get_response())
+            loop.close()
+            
+            # Extraer el texto de la respuesta
+            if isinstance(result, dict):
+                text = result.get('text', str(result))
+            else:
+                text = str(result)
+            
+            return text
+                
+        except Exception as e:
+            error_msg = str(e)
+            if "cookie" in error_msg.lower():
+                return f"❌ Error con cookies de Copilot: {error_msg}. Necesitás exportar cookies actualizadas de Bing."
+            return f"❌ Error en Microsoft Copilot: {error_msg}"
     
     def list_available_providers(self) -> list:
         """Lista los proveedores disponibles y habilitados"""

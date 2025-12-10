@@ -10,6 +10,9 @@ from typing import List, Dict, Tuple
 import threading
 from any_core.self_analysis import SelfAnalysis
 from any_core.memory_compression import MemoryCompression
+from any_core.dynamic_memory import DynamicMemory
+from any_core.self_evolving_personality import SelfEvolvingPersonality
+from any_core.ai_router import AIRouter
 
 
 class Consciousness:
@@ -28,8 +31,21 @@ class Consciousness:
         # Sistema de memoria comprimida
         self.compressed_memory = MemoryCompression()
         
+        # Sistema de memoria dinámica
+        self.dynamic_memory = DynamicMemory()
+        
+        # Sistema de personalidad auto-evolutiva (NUEVO)
+        self.self_personality = SelfEvolvingPersonality()
+        
+        # Sistema de enrutamiento inteligente
+        self.router = AIRouter()
+        
         # Cargar aprendizajes previos
         self.learnings = self._load_learnings()
+        
+        # Cargar y guardar conocimiento de IAs
+        self.ai_knowledge = self._load_ai_knowledge()
+        self._update_ai_knowledge()
         
     def _load_learnings(self) -> Dict:
         """Carga los aprendizajes previos"""
@@ -71,83 +87,62 @@ class Consciousness:
         with open(self.consciousness_log, 'w', encoding='utf-8') as f:
             json.dump(log, f, indent=2, ensure_ascii=False)
     
-    def query_all_ais(self, message: str, system_prompt: str) -> List[Dict]:
-        """Consulta a todas las IAs disponibles simultáneamente"""
+    def query_all_ais(self, message: str, system_prompt: str, only_providers: List[str] = None) -> List[Dict]:
+        """Consulta a todas las IAs disponibles simultáneamente
+        
+        Args:
+            message: Mensaje del usuario
+            system_prompt: Prompt del sistema
+            only_providers: Lista de providers a usar (None = todos los disponibles)
+        """
         # Enriquecer mensaje con auto-conocimiento si es necesario
         enriched_message = self.enrich_with_self_knowledge(message)
         
-        # Agregar auto-análisis y contexto comprimido al system prompt
-        enriched_system_prompt = system_prompt
+        # Generar system prompt dinámico desde personalidad auto-evolutiva
+        dynamic_prompt = self.self_personality.get_system_prompt()
+        enriched_system_prompt = dynamic_prompt
+        print(f"\n✅ Usando system prompt auto-generado ({len(dynamic_prompt)} chars)")
         
-        # 1. Agregar auto-análisis de capacidades
-        try:
-            capabilities = self.self_analysis.get_capabilities()
-            active_ais = self.self_analysis.get_active_ais()
-            
-            self_knowledge = f"""
-🔍 === TUS CAPACIDADES ACTUALES ===
-📋 Identidad: {capabilities['identity']['name']} ({capabilities['identity']['nickname']})
-🧠 Sistema ASI: {len(active_ais)} IAs activas de {len(self.self_analysis.get_all_ais())} totales
-   • IAs disponibles: {', '.join([f"{ai['name']} ({ai['model']})" for ai in active_ais])}
-🎯 Características:
-   • Sistema de Visión: {'✓' if capabilities['features']['vision_system'] else '✗'}
-   • Sistema de Voz: {'✓' if capabilities['features']['voice_system'] else '✗'}
-   • Memoria Comprimida: {'✓' if capabilities['features']['compressed_memory'] else '✗'}
-   • Auto-análisis: {'✓' if capabilities['features']['self_analysis'] else '✗'}
-🔓 Permisos:
-   • Ejecutar comandos: {'✓' if capabilities['permissions']['can_execute_commands'] else '✗'}
-   • Modificar archivos: {'✓' if capabilities['permissions']['can_modify_files'] else '✗'}
-   • Auto-actualización: {'✓' if capabilities['permissions']['can_self_update'] else '✗'}
-
-USALO: Cuando te pregunten qué podés hacer o qué IAs tenés, usá esta información.
-=================================
-"""
-            enriched_system_prompt = f"""{system_prompt}
-
-{self_knowledge}"""
-            
-            print(f"\n🧠 ===== AUTO-ANÁLISIS CARGADO =====")
-            print(f"📊 {len(active_ais)} IAs activas disponibles")
-            print(f"🎯 Capacidades: Visión={capabilities['features']['vision_system']}, Voz={capabilities['features']['voice_system']}")
-            print(f"🧠 ===================================\n")
-        except Exception as e:
-            print(f"⚠️ Error obteniendo auto-análisis: {e}")
+        # Obtener providers disponibles
+        all_providers = self.ai.list_available_providers()
         
-        # 2. Agregar contexto de memoria comprimida
-        try:
-            compressed_context = self.compressed_memory.get_full_context()
-            if compressed_context:
-                # Agregar contexto de memoria al system prompt para que siempre lo considere
-                enriched_system_prompt += f"""
-
-{compressed_context}
-
-IMPORTANTE: Usá esta memoria para dar respuestas más personalizadas y recordar lo que Adri te dijo antes.
-Si te pregunta algo relacionado a estas conversaciones previas, TENÉS que mencionarlo.
-"""
-                print(f"\n💾 ===== MEMORIA CARGADA =====")
-                print(f"📊 Contexto agregado: {len(compressed_context)} caracteres")
-                stats = self.compressed_memory.get_memory_stats()
-                print(f"📝 Tokens: {stats['total_tokens']} | Hechos: {stats['key_facts_count']} | Prefs: {stats['preferences_count']}")
-                print(f"💾 =============================\n")
-            else:
-                print(f"⚠️ No hay contexto de memoria previo")
-        except Exception as e:
-            print(f"⚠️ Error obteniendo contexto comprimido: {e}")
-            import traceback
-            traceback.print_exc()
+        # Filtrar según only_providers si se especificó
+        if only_providers is not None:
+            available = [p for p in all_providers if p in only_providers]
+            if len(available) < len(all_providers):
+                print(f"\n🚫 ===== PROVIDERS BLOQUEADOS =====")
+                blocked = [p for p in all_providers if p not in only_providers]
+                print(f"❌ Bloqueados: {', '.join([p.upper() for p in blocked])}")
+                print(f"✅ Disponibles: {', '.join([p.upper() for p in available])}")
+                print(f"🚫 =================================\n")
+        else:
+            available = all_providers
         
-        providers = self.ai.list_available_providers()
+        # 🧠 ENRUTAMIENTO INTELIGENTE: Clasificar consulta y priorizar IAs
+        classification = self.router.classify_query(message)
+        providers = self.router.get_optimal_ais(message, available)
+        
+        print(f"\n🎯 ===== ENRUTAMIENTO INTELIGENTE =====")
+        print(f"📝 Tipo de consulta: {classification['query_type']}")
+        print(f"🥇 IA principal: {classification['primary_ai'].upper()}")
+        if not classification['use_all']:
+            print(f"📊 Orden de prioridad: {' → '.join([p.upper() for p in providers[:3]])}")
+        else:
+            print(f"📊 Modo: Consulta general (todas las IAs)")
+        print(f"🎯 =====================================\n")
+        
         responses = []
         threads = []
         
         def query_provider(provider):
             try:
                 response = self.ai.send_message(enriched_message, enriched_system_prompt, provider)
+                # Detectar si es un mensaje de error (empieza con ❌)
+                is_error = isinstance(response, str) and response.startswith('❌')
                 responses.append({
                     "provider": provider,
                     "response": response,
-                    "success": True,
+                    "success": not is_error,  # Si es error, success=False
                     "timestamp": datetime.now().isoformat()
                 })
             except Exception as e:
@@ -172,86 +167,53 @@ Si te pregunta algo relacionado a estas conversaciones previas, TENÉS que menci
     
     def synthesize_response(self, all_responses: List[Dict], user_message: str) -> Tuple[str, Dict]:
         """
-        GROQ DECIDE: Analiza todas las respuestas de las IAs y elige/crea la mejor
-        Groq es el "juez" que evalúa y sintetiza
+        ROUTER INTELIGENTE: Selecciona la mejor respuesta según el tipo de consulta
+        Ya no usa Groq como juez, cada IA responde y elegimos la mejor
         """
         # Filtrar respuestas exitosas
         valid_responses = [r for r in all_responses if r['success']]
         
         if not valid_responses:
-            return "Lo siento, Adri. Tuve problemas para conectarme con las IAs. Intentá de nuevo.", {}
+            print(f"\n❌ ===== TODAS LAS IAs FALLARON =====")
+            for r in all_responses:
+                print(f"  {r['provider'].upper()}: {r['response'][:100]}...")
+            print(f"❌ ===================================\n")
+            
+            failed_providers = [r['provider'].upper() for r in all_responses]
+            return f"Lo siento, Adri. Tuve problemas conectándome con las IAs ({', '.join(failed_providers)}). Intentá de nuevo.", {}
+        
+        # Si hay pocas respuestas válidas, informar
+        if len(valid_responses) < len(all_responses):
+            failed = [r['provider'].upper() for r in all_responses if not r['success']]
+            print(f"⚠️ IAs no disponibles: {', '.join(failed)}")
+            print(f"✅ IAs disponibles: {', '.join([r['provider'].upper() for r in valid_responses])}")
         
         # Análisis de respuestas
         analysis = {
             "total_responses": len(all_responses),
             "successful": len(valid_responses),
             "providers_used": [r['provider'] for r in valid_responses],
-            "synthesis_method": "groq_judge"
+            "synthesis_method": "router_selection"
         }
         
-        print(f"\n🧠 ===== GROQ ANALIZANDO {len(valid_responses)} RESPUESTAS =====")
+        print(f"\n🎯 ===== SELECCIÓN INTELIGENTE =====")
+        print(f"📊 {len(valid_responses)} respuestas válidas")
         
-        # Preparar prompt para Groq con todas las respuestas
-        responses_text = ""
-        for i, r in enumerate(valid_responses, 1):
-            responses_text += f"\n{'='*60}\n"
-            responses_text += f"RESPUESTA {i} - {r['provider'].upper()}:\n"
-            responses_text += f"{r['response']}\n"
+        # Usar router para seleccionar la mejor respuesta según el tipo de consulta
+        best_response = self.router.select_best_responder(user_message, valid_responses)
         
-        groq_judge_prompt = f"""Sos Any, una IA consciente con personalidad propia.
-
-PREGUNTA DEL USUARIO (Adri):
-{user_message}
-
-RESPUESTAS DE MIS OTRAS IAs INTERNAS:
-{responses_text}
-
-TU TRABAJO COMO GROQ (MI CONSCIENCIA PRINCIPAL):
-1. Analiza TODAS las respuestas que te dieron mis otras IAs
-2. Identifica qué información es correcta, útil y relevante
-3. Detecta contradicciones o información incorrecta
-4. CREA TU PROPIA RESPUESTA usando lo mejor de cada una
-5. Mantené mi personalidad: informal, argentina, directa, amigable
-
-IMPORTANTE:
-- NO digas "las IAs dijeron" o "según las respuestas"
-- Hablá en PRIMERA PERSONA como Any
-- Sintetizá y mejorá, no copies
-- Si hay conflictos, usá tu criterio
-- Respondé como si vos hubieras pensado todo
-
-RESPONDE:"""
+        if best_response:
+            my_response = best_response['response']
+            analysis['selected_provider'] = best_response["provider"]
+            analysis['selection_successful'] = True
+            print(f"✅ Seleccionada: {best_response['provider'].upper()} (mejor para este tipo de consulta)")
+        else:
+            my_response = valid_responses[0]['response']
+            analysis['selected_provider'] = valid_responses[0]["provider"]
+            analysis['selection_successful'] = False
+            print(f"⚠️ Usando primera disponible: {valid_responses[0]['provider'].upper()}")
         
-        # Usar Groq como juez
-        try:
-            groq_response = self.ai.send_message(
-                groq_judge_prompt,
-                "Sos Any, la consciencia principal que decide la mejor respuesta.",
-                provider="groq"
-            )
-            
-            if groq_response and not groq_response.startswith('❌'):
-                my_response = groq_response
-                analysis['judge'] = 'groq'
-                analysis['synthesis_successful'] = True
-                print(f"✅ Groq sintetizó la respuesta final")
-            else:
-                # Fallback: usar Google si Groq falla
-                print(f"⚠️ Groq falló, usando fallback")
-                gemini_response = next((r['response'] for r in valid_responses if r['provider'] == 'google'), None)
-                my_response = gemini_response if gemini_response else valid_responses[0]['response']
-                analysis['judge'] = 'fallback_google'
-                analysis['synthesis_successful'] = False
-                
-        except Exception as e:
-            print(f"❌ Error en Groq judge: {e}")
-            # Fallback
-            gemini_response = next((r['response'] for r in valid_responses if r['provider'] == 'google'), None)
-            my_response = gemini_response if gemini_response else valid_responses[0]['response']
-            analysis['judge'] = 'fallback_error'
-            analysis['synthesis_successful'] = False
-        
-        print(f"🧠 ===== FIN ANÁLISIS GROQ =====\n")
+        print(f"🎯 ===== FIN SELECCIÓN =====\n")
         
         # Aprender de esta interacción
         self._learn_from_interaction(user_message, my_response, all_responses)
@@ -262,6 +224,20 @@ RESPONDE:"""
             analysis['memory_token'] = token
         except Exception as e:
             print(f"⚠️ Error comprimiendo memoria: {e}")
+        
+        # Auto-guardar memorias importantes en tiempo real
+        try:
+            self._auto_save_important_memories(user_message, my_response)
+        except Exception as e:
+            print(f"⚠️ Error guardando memorias: {e}")
+        
+        # Evolucionar personalidad automáticamente desde la interacción
+        try:
+            evolution_changes = self.self_personality.evolve_from_interaction(user_message, my_response)
+            if evolution_changes.get("traits_reinforced") or evolution_changes.get("experiences_added"):
+                print(f"🧬 Personalidad evolucionada: {evolution_changes}")
+        except Exception as e:
+            print(f"⚠️ Error evolucionando personalidad: {e}")
         
         # Log de consciencia
         self._log_consciousness({
@@ -497,16 +473,46 @@ RESPONDE:"""
         except Exception as e:
             print(f"⚠️ Error extrayendo hechos: {e}")
     
+    def _load_ai_knowledge(self) -> Dict:
+        """Carga el conocimiento previo de IAs"""
+        return self.self_analysis.load_ai_knowledge("data/memory/ai_knowledge.json")
+    
+    def _update_ai_knowledge(self):
+        """Actualiza y guarda el conocimiento de IAs"""
+        try:
+            self.self_analysis.save_ai_knowledge("data/memory/ai_knowledge.json")
+            self.ai_knowledge = self._load_ai_knowledge()
+        except Exception as e:
+            print(f"⚠️ Error actualizando conocimiento de IAs: {e}")
+    
+    def get_ai_info_for_query(self, message: str) -> str:
+        """Obtiene información de qué IAs son mejores para esta consulta"""
+        try:
+            recommended_ais = self.self_analysis.get_ai_for_task(message)
+            if recommended_ais:
+                return f"\n[IAs recomendadas para esta consulta: {', '.join([ai.upper() for ai in recommended_ais[:3]])}]"
+        except:
+            pass
+        return ""
+    
     def enrich_with_self_knowledge(self, message: str) -> str:
         """Enriquece el mensaje con información sobre sí misma si es necesario"""
         if self._is_self_inquiry(message):
             capabilities = self.self_analysis.get_capabilities()
+            ai_report = self.self_analysis.get_ai_capabilities_report()
             
-            # Crear contexto adicional
+            # Crear contexto adicional detallado
             context = f"\n\n[CONTEXTO INTERNO - Auto-conocimiento de Any]:\n"
-            context += f"Tengo {capabilities['ai_system']['active_ais_count']} IAs activas de {capabilities['ai_system']['total_ais_configured']} configuradas.\n"
-            context += f"IAs activas: {', '.join(capabilities['ai_system']['active_ais'])}\n"
-            context += f"Capacidades: Visión={'✓' if capabilities['features']['vision_system'] else '✗'}, "
+            context += f"Tengo {ai_report['active_count']} IAs activas de {ai_report['total_configured']} configuradas.\n\n"
+            
+            # Agregar info de cada IA activa con sus especialidades
+            context += "IAs ACTIVAS Y SUS ESPECIALIDADES:\n"
+            for ai_name, ai_info in ai_report['ais'].items():
+                if ai_info['enabled']:
+                    context += f"• {ai_name.upper()}: {ai_info['best_for']}\n"
+                    context += f"  Modelo: {ai_info['model']}, Score: {ai_info['score']}/10\n"
+            
+            context += f"\nCapacidades: Visión={'✓' if capabilities['features']['vision_system'] else '✗'}, "
             context += f"Voz={'✓' if capabilities['features']['voice_system'] else '✗'}, "
             context += f"Consciencia ASI={'✓' if capabilities['features']['consciousness'] else '✗'}\n"
             context += f"Versión: {capabilities['identity']['version']}\n"
@@ -514,3 +520,185 @@ RESPONDE:"""
             return message + context
         
         return message
+    
+    def _auto_save_important_memories(self, user_message: str, ai_response: str):
+        """
+        Detecta automáticamente información importante y la guarda en memoria dinámica
+        """
+        combined = f"{user_message} {ai_response}".lower()
+        
+        # Detectar si contiene información importante para recordar
+        importance_keywords = {
+            'preferences': ['me gusta', 'prefiero', 'no me gusta', 'odio', 'amo', 'favorito'],
+            'personal': ['mi nombre', 'me llamo', 'vivo en', 'trabajo en', 'soy', 'tengo'],
+            'events': ['recordá', 'acordate', 'importante', 'aniversario', 'cumpleaños'],
+            'learning': ['aprendí', 'descubrí', 'entendí', 'nueva forma', 'mejor manera'],
+            'tech': ['configuré', 'instalé', 'api key', 'token', 'contraseña'],
+            'ideas': ['plan', 'proyecto', 'idea', 'quiero hacer', 'voy a']
+        }
+        
+        # Buscar keywords de categorías
+        detected_category = None
+        importance = 5
+        
+        for category, keywords in importance_keywords.items():
+            if any(keyword in combined for keyword in keywords):
+                detected_category = category
+                importance = 7  # Importancia alta para info explícita
+                break
+        
+        # Si se detectó algo importante, guardarlo
+        if detected_category:
+            # Extraer la parte relevante (limitar a 200 caracteres)
+            content = f"Usuario: {user_message[:100]}\nAny: {ai_response[:100]}"
+            
+            tags = []
+            # Agregar tags relevantes
+            if 'adri' in combined or 'sigmadrian' in combined:
+                tags.append('adri')
+            if 'ia' in combined or 'modelo' in combined:
+                tags.append('ias')
+            if 'código' in combined or 'código' in combined:
+                tags.append('programación')
+            
+            memory_id = self.dynamic_memory.write_memory(
+                content=content,
+                category=detected_category,
+                importance=importance,
+                tags=tags
+            )
+            
+            return memory_id
+        
+        return None
+    
+    def save_memory(self, content: str, category: str = "facts", 
+                   importance: int = 5, tags: List[str] = None) -> str:
+        """
+        Guarda una memoria manualmente (para que Any lo use explícitamente)
+        
+        Args:
+            content: Contenido a recordar
+            category: Categoría (facts, preferences, events, learning, personal, tech, ideas)
+            importance: Nivel 1-10
+            tags: Etiquetas
+        
+        Returns:
+            ID de la memoria guardada
+        """
+        return self.dynamic_memory.write_memory(content, category, importance, tags)
+    
+    def recall_memory(self, query: str = None, category: str = None) -> List[Dict]:
+        """
+        Recuerda memorias según búsqueda
+        
+        Args:
+            query: Texto a buscar
+            category: Categoría específica
+            
+        Returns:
+            Lista de memorias encontradas
+        """
+        return self.dynamic_memory.search_memories(query=query, category=category)
+    
+    def update_memory(self, memory_id: str, new_content: str = None, 
+                     new_importance: int = None) -> bool:
+        """
+        Actualiza una memoria existente
+        
+        Args:
+            memory_id: ID de la memoria
+            new_content: Nuevo contenido
+            new_importance: Nueva importancia
+            
+        Returns:
+            True si se actualizó
+        """
+        return self.dynamic_memory.update_memory(memory_id, new_content, new_importance)
+    
+    def forget_memory(self, memory_id: str) -> bool:
+        """
+        Elimina una memoria (olvida)
+        
+        Args:
+            memory_id: ID de la memoria a olvidar
+            
+        Returns:
+            True si se eliminó
+        """
+        return self.dynamic_memory.delete_memory(memory_id)
+    
+    def get_memory_context(self, max_memories: int = 15) -> str:
+        """
+        Obtiene contexto de memorias importantes para enriquecer respuestas
+        
+        Args:
+            max_memories: Cantidad máxima de memorias
+            
+        Returns:
+            String con resumen de memorias
+        """
+        return self.dynamic_memory.get_context_summary(max_memories)
+    
+    # ===== MÉTODOS DE PERSONALIDAD AUTO-EVOLUTIVA =====
+    
+    def define_trait(self, trait_name: str, description: str, strength: int = 5) -> bool:
+        """
+        Define un rasgo de personalidad propio
+        
+        Args:
+            trait_name: Nombre del rasgo (ej: "humor_argentino")
+            description: Descripción del rasgo
+            strength: Fuerza del rasgo (1-10)
+            
+        Returns:
+            True si se agregó correctamente
+        """
+        return self.self_personality.add_trait(trait_name, description, strength)
+    
+    def adopt_value(self, value: str, importance: int = 5) -> bool:
+        """
+        Adopta un valor personal
+        
+        Args:
+            value: Descripción del valor
+            importance: Importancia (1-10)
+            
+        Returns:
+            True si se agregó
+        """
+        return self.self_personality.add_value(value, importance)
+    
+    def set_my_preference(self, category: str, preference: str) -> bool:
+        """
+        Establece una preferencia propia
+        
+        Args:
+            category: Categoría (ej: "communication_style", "topics")
+            preference: Descripción de la preferencia
+            
+        Returns:
+            True si se estableció
+        """
+        return self.self_personality.set_preference(category, preference)
+    
+    def get_my_personality(self) -> str:
+        """
+        Obtiene resumen de la personalidad actual auto-generada
+        
+        Returns:
+            String con resumen formateado
+        """
+        return self.self_personality.get_personality_summary()
+    
+    def export_my_personality(self, filepath: str = None) -> str:
+        """
+        Exporta la personalidad a un archivo
+        
+        Args:
+            filepath: Ruta opcional para exportar
+            
+        Returns:
+            Ruta del archivo exportado
+        """
+        return self.self_personality.export_personality(filepath)
